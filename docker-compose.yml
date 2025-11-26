@@ -1,0 +1,24 @@
+services:
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - datetime-mcp
+      - searchxng-mcp
+      - weather-mcp
+
+  datetime-mcp:
+    build: ./mcp-servers/datetime
+
+  searchxng-mcp:
+    build: ./mcp-servers/searchxng
+
+  weather-mcp:
+    build: ./mcp-servers/weather
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "7860:7860"
