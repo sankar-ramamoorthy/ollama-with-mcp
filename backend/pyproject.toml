@@ -1,13 +1,30 @@
 [project]
-name = "ollama-with-mcp"
+name = "backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "Backend service for Ollama + MCP project"
 readme = "README.md"
 requires-python = ">=3.13"
+
+# Runtime dependencies
 dependencies = [
-    "fastapi>=0.122.0",
-    "uvicorn>=0.38.0",
+    "fastapi>=0.111.0",
+    "uvicorn>=0.30.0",
 ]
 
-[tool.uv.workspace]
-members = ["backend/backend"]
+# Development / test dependencies
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "httpx",        # Needed for async FastAPI testing
+    "pytest-asyncio",
+]
+
+[tool.uv]
+# Where uv looks for source code
+package = true
+#work-dir = "src"
+
+#[tool.uv.workspace]
+# module lives at: backend/src/backend
+#members = ["."]
+
