@@ -5,5 +5,5 @@ from backend.services.chat_service import chat_reply
 router = APIRouter()
 
 @router.post("/chat", response_model=ChatResponse)
-def chat(request: ChatRequest):
-    return chat_reply(request)
+async def chat(request: ChatRequest):
+    return await chat_reply(request)
