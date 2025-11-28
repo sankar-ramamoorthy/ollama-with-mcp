@@ -2,13 +2,14 @@ FROM astral/uv:python3.12-bookworm-slim
 
 WORKDIR /app
 
-# Copy project
-COPY . .
+#  Copy only dependency files first for caching
+COPY pyproject.toml pyproject.lock* uv.lock ./
 
-
-# Install dependencies
+#  Install runtime dependencies via UV
 RUN uv sync --frozen
 
-#CMD ["uv", "run", "uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8000"]
-CMD ["uv", "run", "uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--app-dir", "src"]
+#  Copy the rest of the project
+COPY . .
 
+#  Start FastAPI app
+CMD ["uv", "run", "uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--app-dir", "src"]
