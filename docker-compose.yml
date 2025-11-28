@@ -8,17 +8,55 @@ services:
       - datetime-mcp
       - searchxng-mcp
       - weather-mcp
+    restart: unless-stopped
+    networks:
+      - llm_network
 
   datetime-mcp:
     build: ./mcp-servers/datetime
+    ports:
+      - "50051:50051"
+    restart: unless-stopped
+    networks:
+      - llm_network
 
   searchxng-mcp:
     build: ./mcp-servers/searchxng
+    ports:
+      - "50052:50052"
+    restart: unless-stopped
+    networks:
+      - llm_network
 
   weather-mcp:
     build: ./mcp-servers/weather
+    ports:
+      - "50053:50053"
+    restart: unless-stopped
+    networks:
+      - llm_network
 
   frontend:
     build: ./frontend
     ports:
       - "7860:7860"
+    restart: unless-stopped
+    networks:
+      - llm_network
+
+  searchxng_svc:
+    build: ./searchxng_svc
+    volumes:
+      - ./searchxng_svc/settings.yml:/etc/searxng/settings.yml
+      - ./searchxng_svc/limiter.toml:/etc/searxng/limiter.toml
+      - searxng_cache:/var/cache/searxng
+    ports:
+      - "8181:8080"
+    networks:
+      - llm_network
+
+networks:
+  llm_network:
+
+volumes:
+  searxng_cache:
