@@ -1,0 +1,22 @@
+[project]
+name = "datetime-mcp"
+version = "0.1.0"
+description = "Datetime MCP server"
+readme = "README.md"
+requires-python = ">=3.12"
+
+# Runtime dependencies
+dependencies = [
+    "fastmcp>=2.11.0",
+    #"httpx>=0.24.1,<1.0.0"
+]
+
+# Development / test dependencies (optional)
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio"
+]
+
+[tool.uv]
+package = true
