@@ -10,6 +10,12 @@ SEARCHXNG_MCP_PORT = 50052
 # Build full MCP URL
 MCP_URL = f"http://{SEARCHXNG_MCP_HOST}:{SEARCHXNG_MCP_PORT}/mcp"
 
+
+WEATHER_MCP_HOST = "weather-mcp"
+WEATHER_MCP_PORT = 50053
+WEATHER_URL = f"http://{WEATHER_MCP_HOST}:{WEATHER_MCP_PORT}/mcp"
+
+
 # NOTE: The Client instance must be used within an async context manager.
 # Do not create it at the module level for direct use.
 
@@ -38,3 +44,13 @@ async def call_searchxng(query: str) -> Dict[str, Any]:
         # Graceful error handling
         return {"error": str(e), "results": []}
 
+
+async def call_weather(location: str) -> Dict[str, Any]:
+    if not location or not isinstance(location, str):
+        return {"error": "Location must be a non-empty string", "results": []}
+    try:
+        async with Client(WEATHER_URL) as client:
+            response: CallToolResult = await client.call_tool("get_weather_tool", {"location": location})
+            return response.structured_content
+    except Exception as e:
+        return {"error": str(e), "results": []}
