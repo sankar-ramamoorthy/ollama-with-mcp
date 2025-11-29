@@ -24,7 +24,7 @@ async def call_geocoding(location: str) -> Dict[str, Any]:
 
     try:
         async with Client(MCP_URL) as client:
-            mcp_response: CallToolResult = await client.call_tool("geocode", {"location": location})
+            mcp_response: CallToolResult = await client.call_tool("geocode_tool", {"address": location})
             # Return structured content or raw content
             return mcp_response.structured_content or mcp_response.content
     except Exception as e:
