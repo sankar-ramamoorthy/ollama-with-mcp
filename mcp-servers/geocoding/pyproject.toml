@@ -1,19 +1,15 @@
 [project]
-name = "weather-mcp"
+name = "geocoding-mcp"
 version = "0.1.0"
-description = "Weather MCP server"
+description = "Geocoding MCP server"
 readme = "README.md"
 requires-python = ">=3.12"
 
 # Runtime dependencies
 dependencies = [
-    "fastmcp>=2.11.0",
-    "openmeteo-requests",
-    "requests-cache",
-    "retry-requests",
-    "numpy",
-    "pandas"
-    #"httpx>=0.24.1,<1.0.0"  # Uncomment if you integrate real API calls later
+    "fastmcp>=2.11.0",  # For handling MCP server functionality
+    "requests",  # For making HTTP requests to geocoding APIs
+    "aiohttp",   # For async HTTP requests (if your geocoding API requires it)
 ]
 
 # Development / test dependencies (optional)

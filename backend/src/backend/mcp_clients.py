@@ -15,6 +15,16 @@ WEATHER_MCP_HOST = "weather-mcp"
 WEATHER_MCP_PORT = 50053
 WEATHER_URL = f"http://{WEATHER_MCP_HOST}:{WEATHER_MCP_PORT}/mcp"
 
+# MCP server host and port (Docker Compose service names)
+GEOCODING_MCP_HOST = "geocoding-mcp"
+GEOCODING_MCP_PORT = 50054
+GEOCODING_URL = f"http://{GEOCODING_MCP_HOST}:{GEOCODING_MCP_PORT}/mcp"
+
+DATETIME_MCP_HOST = "datetime-mcp"
+DATETIME_MCP_PORT = 50055
+DATETIME_URL = f"http://{DATETIME_MCP_HOST}:{DATETIME_MCP_PORT}/mcp"
+
+
 
 # NOTE: The Client instance must be used within an async context manager.
 # Do not create it at the module level for direct use.
@@ -54,3 +64,44 @@ async def call_weather(location: str) -> Dict[str, Any]:
             return response.structured_content
     except Exception as e:
         return {"error": str(e), "results": []}
+
+async def call_geocoding(address: str) -> Dict[str, Any]:
+    """
+    Call the Geocoding MCP server to get latitude, longitude, and other details.
+    
+    Args:
+        address (str): The address to geocode.
+    
+    Returns:
+        dict: Geocoding result (latitude, longitude, etc.).
+    """
+    if not address or not isinstance(address, str):
+        return {"error": "Address must be a non-empty string", "results": []}
+    
+    try:
+        async with Client(GEOCODING_URL) as client:
+            mcp_response: CallToolResult = await client.call_tool("geocode_tool", {"address": address})
+            return mcp_response.structured_content or mcp_response.content
+    except Exception as e:
+        return {"error": str(e), "results": []}
+
+async def call_datetime(timestamp: str) -> Dict[str, Any]:
+    """
+    Call the Datetime MCP server to get datetime information for a given timestamp.
+    
+    Args:
+        timestamp (str): The timestamp to process.
+    
+    Returns:
+        dict: Datetime result with the formatted date and time.
+    """
+    if not timestamp or not isinstance(timestamp, str):
+        return {"error": "Timestamp must be a non-empty string", "results": []}
+    
+    try:
+        async with Client(DATETIME_URL) as client:
+            mcp_response: CallToolResult = await client.call_tool("datetime_tool", {"timestamp": timestamp})
+            return mcp_response.structured_content or mcp_response.content
+    except Exception as e:
+        return {"error": str(e), "results": []}
+
