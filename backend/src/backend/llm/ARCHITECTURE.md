@@ -1,103 +1,137 @@
-
-## **ARCHITECTURE.md**
+---
 
 ```markdown
-# Ollama-with-MCP Architecture
+# Architecture — Ollama with MCP Backend
 
-## **High-Level Architecture**
+## Overview
 
-````
+This system provides a **multi-step orchestration engine** for processing user queries via an LLM (Ollama) with optional tool execution through multiple MCP servers. It is designed for modularity, testability, and clear separation of concerns.
 
-+--------------------+
-|      User/API      |
-+--------------------+
-|
-v
-+--------------------+
-|   /chat Endpoint   |
-| (FastAPI Router)   |
-+--------------------+
-|
-v
-+--------------------+
-|  LLM Orchestrator  |
-| - Decides if tool  |
-|   is required      |
-| - Calls MCPManager |
-+--------------------+
-|
-v
-+--------------------+
-|   MCPManager       |
-| - Handles multiple |
-|   MCP servers      |
-| - Normalizes output|
-+--------------------+
-|      |      |
-v      v      v
-+-------+ +-------+ +---------+
-|Weather| |Geocoding| |Datetime|
-| MCP   | | MCP     | | MCP    |
-+-------+ +-------+ +---------+
-|
-v
-+--------------------+
-|  LLM Final Answer  |
-| - Synthesizes tool |
-|   output & user    |
-+--------------------+
-|
-v
-+--------------------+
-|      User/API      |
-+--------------------+
+---
+
+## Components
+
+### 1. FastAPI Backend
+- Receives user requests via `/chat` or other MCP-specific endpoints.
+- Routes queries to `LLMOrchestrator` for decision-making.
+- Includes routers for specific MCP tools (weather, geocoding, search, datetime).
+
+### 2. LLM Orchestrator (`LLMOrchestrator`)
+- Core class responsible for multi-step orchestration:
+  1. Sends the user query to the LLM.
+  2. Parses LLM JSON response using `ToolDecision` schema.
+  3. Calls appropriate tool via `MCPManager` if required.
+  4. Sends tool output back to LLM for final answer synthesis.
+  5. Returns unified JSON response to API client.
+
+- Handles both **direct answer scenarios** and **tool-required scenarios**.
+- Logs each step for observability.
+
+### 3. MCPManager
+- Provides a **unified API** to interact with multiple MCP servers.
+- Maintains a registry of available MCP servers:
+  - `datetime`
+  - `searchxng`
+  - `weather`
+  - `geocoding`
+- Normalizes responses to a consistent dictionary format.
+- Manages errors gracefully.
+
+### 4. MCP Servers
+Each MCP server runs as a separate Docker service:
+
+| Service          | Port  | Responsibility                         |
+|-----------------|-------|----------------------------------------|
+| `datetime-mcp`   | 50051 | Returns formatted datetime for timestamps |
+| `searchxng-mcp`  | 50052 | Executes web searches                  |
+| `weather-mcp`    | 50053 | Returns weather information            |
+| `geocoding-mcp`  | 50054 | Returns latitude/longitude for addresses |
+
+- Servers communicate via HTTP APIs using the `fastmcp.Client`.
+
+### 5. Ollama LLM
+- Runs on host at `http://host.docker.internal:11434/api/generate`.
+- Provides decision-making and response synthesis for queries.
+- Returns JSON responses for tool decisions and final answers.
+
+---
+
+## Data Flow
+
+```
+
+User
+│
+│ POST /chat {"message": "What is the weather in Paris?"}
+▼
+FastAPI Chat Router
+│
+│ forwards message
+▼
+LLMOrchestrator.process_query()
+│
+│ Step 1: Send LLM decision prompt
+▼
+Ollama LLM
+│
+│ returns JSON: {"tool_required": true, "tool_name": "weather", "arguments": {"location": "Paris"}}
+▼
+LLMOrchestrator
+│
+│ Step 2: Parse JSON → ToolDecision
+│
+│ Step 3: Call MCP tool if needed
+▼
+MCPManager.call_tool("weather", {"location": "Paris"})
+│
+▼
+Weather MCP Server
+│
+│ returns weather data
+▼
+MCPManager → LLMOrchestrator
+│
+│ Step 4: Send tool output back to LLM for final answer
+▼
+Ollama LLM
+│
+│ returns synthesized final answer
+▼
+LLMOrchestrator → FastAPI
+│
+│ Step 5: Return unified JSON response
+▼
+User receives final response
 
 ```
 
 ---
 
-## **Components**
+## Key Design Principles
 
-### **LLM Orchestrator**
-- Determines if a tool call is needed.
-- Returns direct answer if no tool required.
-- Calls `MCPManager` for tool execution.
-- Synthesizes final response.
+1. **Modularity**  
+   Each MCP tool and LLM logic is separated for easy testing and future extension.
 
-### **MCPManager**
-- Registry of MCP servers:
-  - Datetime, SearchXNG, Weather, Geocoding
-- Unified `call_tool(server, tool, args)` interface.
-- Normalizes responses.
+2. **Unified Output**  
+   All MCP responses are normalized by `MCPManager` to a consistent dictionary structure.
 
-### **MCP Servers**
-- Individual services (Docker containers)
-- Each exposes tools like `get_weather_tool`, `geocode_tool`, `datetime_tool`.
-- Communicate via HTTP + MCP protocol.
+3. **Error Handling**  
+   LLM parsing errors, MCP tool errors, and network issues are logged and returned gracefully.
 
-### **Gradio Frontend**
-- Interacts with `/chat` endpoint.
-- Receives final LLM answer + optional tool outputs.
+4. **Async First**  
+   All API calls, LLM interactions, and MCP calls are async for optimal performance.
+
+5. **Extensible Orchestration**  
+   Adding new MCP tools or modifying LLM prompts requires minimal changes in `LLMOrchestrator`.
 
 ---
 
-## **Data Flow**
+## Next Steps / Future Enhancements
 
-1. User submits a message to `/chat`.
-2. Orchestrator sends a decision prompt to LLM.
-3. LLM responds with `ToolDecision` JSON.
-4. If a tool is required:
-   - MCPManager calls the corresponding MCP server tool.
-   - Normalized output is returned.
-5. Orchestrator sends tool output back to LLM for final synthesis.
-6. Response returned to user.
-
----
-
-## **Notes**
-- Each MCP server runs in its own Docker container.
-- LLM calls are asynchronous.
-- Normalized outputs ensure consistent JSON structure.
-- `__init__.py` present in all directories to mark them as Python packages.
+- Finalize **prompt templates** for consistent `ToolDecision` JSON output.
+- Add **unit and integration tests** for orchestration flow.
+- Extend support for additional MCP tools (e.g., NLP, analytics, file processing).
+- Implement **streaming responses** for long-running LLM tasks.
 ```
 
+---

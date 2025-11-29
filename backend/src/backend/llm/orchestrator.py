@@ -57,7 +57,7 @@ class LLMOrchestrator:
         if decision.tool_required and decision.tool_name:
             try:
                 tool_output = await self.mcp_manager.call_tool(
-                    decision.tool_name, decision.tool_name, decision.arguments or {}
+                    decision.tool_name, f"get_{decision.tool_name}_tool", decision.arguments or {}
                 )
             except Exception as e:
                 logger.error(f"Tool call failed: {e}")

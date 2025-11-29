@@ -1,116 +1,185 @@
----
 
-## **README.md**
+````markdown
+# Ollama with MCP Backend
 
-```markdown
-# Ollama-with-MCP
-
-A modular backend system integrating multiple MCP (Multi-Container-Protocol) servers with an LLM orchestration layer and a Gradio frontend. Supports multi-step queries with tool selection via LLM.
+A multi-component backend for orchestrating LLM queries with external MCP tools.  
+This project allows user queries to be processed by an LLM and routed to specialized tool servers (weather, geocoding, search, datetime) when required.
 
 ---
 
-## **Project Overview**
+## Table of Contents
 
-- **Phase 5-6**: Added MCP servers for SearchXNG, Weather, Geocoding, and Datetime.
-- **Phase 7**: Added LLM Orchestrator and MCPManager for multi-step query execution.
-- **Phase 8**: Gradio frontend integration.
-
-**Core Flow**:
-
-```
-
-User → /chat endpoint → LLM Orchestrator → MCPManager → MCP Tools → LLM → Response
-
-```
+- [Architecture](#architecture)
+- [Features](#features)
+- [Directory Structure](#directory-structure)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [API Endpoints](#api-endpoints)
+- [Contributing](#contributing)
 
 ---
 
-## **Directory Structure**
+## Architecture
 
-```
+This backend uses a **Phase 7 orchestration engine** with the following flow:
 
-backend/
-├── src/backend/
-│   ├── llm/
-│   │   ├── **init**.py
-│   │   ├── orchestrator.py
-│   │   └── schemas.py
-│   ├── mcp/
-│   │   ├── **init**.py
-│   │   └── manager.py
-│   ├── routers/
-│   │   ├── chat.py
-│   │   ├── weather.py
-│   │   ├── geocoding.py
-│   │   ├── datetime.py
-│   │   ├── search.py
-│   │   └── health.py
-│   ├── services/
-│   │   ├── chat_service.py
-│   │   └── ollama_service.py
-│   ├── models/
-│   │   └── chat.py
-│   ├── mcp_clients.py
-│   └── app.py
-docker-compose.yml
-frontend/ (Gradio)
-mcp-servers/
+1. **User Query → `/chat` Endpoint**  
+   The query is received at FastAPI `/chat`.
 
+2. **LLM Decision**  
+   The `LLMOrchestrator` sends a prompt to the Ollama LLM to determine whether a tool is needed.  
+   Output must follow the `ToolDecision` JSON schema:
+
+   ```json
+   {
+       "tool_required": true,
+       "tool_name": "weather",
+       "arguments": {"location": "San Francisco"},
+       "final_answer": null
+   }
 ````
 
+3. **Tool Execution**
+   If a tool is required, the orchestrator calls `MCPManager.call_tool(tool_name, arguments)` to execute the corresponding MCP server tool.
+
+4. **Final Answer Generation**
+   Tool output is sent back to the LLM for final synthesis if necessary.
+   The orchestrator returns a unified JSON response to the user.
+
 ---
 
-## **Requirements**
+## Features
 
-- Python 3.11+
-- Docker & Docker Compose
-- Dependencies managed via `pyproject.toml` and `uv.lock`
+* Multi-step orchestration: User → LLM → Tool → LLM final answer.
+* Support for multiple MCP tools:
+
+  * Weather (`weather-mcp`)
+  * Geocoding (`geocoding-mcp`)
+  * Search (`searchxng-mcp`)
+  * Datetime (`datetime-mcp`)
+* Robust JSON parsing and error handling.
+* Unified logging for tracing LLM decisions and tool calls.
+* FastAPI backend with modular routers.
 
 ---
 
-## **Setup & Run**
+## Directory Structure
 
-1. **Build & start services**
+```text
+backend/
+├── src/
+│   └── backend/
+│       ├── llm/
+│       │   ├── orchestrator.py
+│       │   ├── mcp_manager.py
+│       │   └── schemas.py
+│       ├── mcp/
+│       │   └── manager.py
+│       ├── models/
+│       ├── routers/
+│       ├── services/
+│       ├── tests/
+│       └── app.py
+frontend/
+mcp-servers/
+searchxng_svc/
+docker-compose.yml
+```
+
+---
+
+## Getting Started
+
+1. **Clone the repository**
+
+```bash
+git clone <repo_url>
+cd ollama-with-mcp
+```
+
+2. **Install dependencies for backend**
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate     # Windows
+pip install -r requirements.txt
+```
+
+3. **Start Docker services**
 
 ```bash
 docker-compose up --build
-````
-
-2. **Available services**
-
-* Backend FastAPI: `http://localhost:8000`
-* Gradio frontend: `http://localhost:7860`
-* MCP servers ports:
-
-  * Datetime: 50051
-  * SearchXNG: 50052
-  * Weather: 50053
-  * Geocoding: 50054
-
-3. **Test /chat endpoint**
-
-```bash
-POST http://localhost:8000/chat
-Body: {"message": "What is the weather in New York tomorrow?"}
 ```
 
-* Orchestrator will automatically decide which tools to call.
-* Tools are called via `MCPManager` for normalized outputs.
+Services:
+
+* `backend` (FastAPI)
+* `weather-mcp`
+* `geocoding-mcp`
+* `searchxng-mcp`
+* `datetime-mcp`
+* `frontend`
+* `searchxng_svc`
 
 ---
 
-## **Logging**
+## Usage
 
-* Logs are printed for LLM decisions, tool calls, and errors.
-* Use `logging` module in Python to configure logging level/output.
+* **Chat endpoint**: `/chat`
+* **Weather endpoint**: `/weather/get`
+* **Other MCP tools** are invoked automatically via the orchestrator when necessary.
+
+Example `/chat` request:
+
+```json
+{
+    "message": "What is the weather in Paris?"
+}
+```
+
+Example `/chat` response:
+
+```json
+{
+    "response": "The weather in Paris is sunny with 20°C.",
+    "tool_output": {
+        "temperature": 20,
+        "condition": "sunny",
+        "location": "Paris"
+    }
+}
+```
 
 ---
 
-## **Future Work**
+## API Endpoints
 
-* Handle datetime formatting issues.
-* Implement rate limiting on Geocoding MCP.
-* Expand integration tests for full tool chaining.
+| Endpoint       | Method | Description                             |
+| -------------- | ------ | --------------------------------------- |
+| `/chat`        | POST   | Main LLM chat endpoint                  |
+| `/weather/get` | POST   | Fetch weather via Weather MCP tool      |
+| `/search`      | POST   | Search via SearchXNG MCP tool           |
+| `/geocode`     | POST   | Geocode via Geocoding MCP tool          |
+| `/datetime`    | POST   | Get formatted datetime via Datetime MCP |
 
-````
+---
+
+## Contributing
+
+1. Create a branch for the issue you are working on (e.g., `phase7/issue-30-orchestrator`).
+2. Implement and test features locally.
+3. Commit and push changes.
+4. Open a pull request and request review.
+
+---
+
+## Notes
+
+* LLM interactions are async using `chat_with_ollama`.
+* All MCP calls are routed via `MCPManager` for consistent outputs.
+* The orchestrator is fully unit-testable with mocked MCP responses.
+
+```
 
