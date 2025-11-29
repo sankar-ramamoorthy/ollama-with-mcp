@@ -35,6 +35,16 @@ services:
     restart: unless-stopped
     networks:
       - llm_network
+    depends_on:
+      - geocoding-mcp  # Ensure geocoding-mcp is started before weather-mcp      
+
+  geocoding-mcp:
+    build: ./mcp-servers/geocoding
+    ports:
+      - "50054:50054"
+    restart: unless-stopped
+    networks:
+      - llm_network
 
   frontend:
     build: ./frontend

@@ -1,0 +1,28 @@
+[project]
+name = "geocoding-mcp"
+version = "0.1.0"
+description = "Geocoding MCP server"
+readme = "README.md"
+requires-python = ">=3.12"
+
+# Runtime dependencies
+dependencies = [
+    "fastmcp>=2.11.0",  # For handling MCP server functionality
+    "requests",  # For making HTTP requests to geocoding APIs
+    "aiohttp",   # For async HTTP requests (if your geocoding API requires it)
+]
+
+# Development / test dependencies (optional)
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio"
+]
+
+[tool.uv]
+package = true
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.1",
+]
