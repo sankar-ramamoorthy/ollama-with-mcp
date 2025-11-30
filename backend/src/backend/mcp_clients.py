@@ -8,7 +8,8 @@ SEARCHXNG_MCP_HOST = "searchxng-mcp"
 SEARCHXNG_MCP_PORT = 50052
 
 # Build full MCP URL
-MCP_URL = f"http://{SEARCHXNG_MCP_HOST}:{SEARCHXNG_MCP_PORT}/mcp"
+MCP_URL       = f"http://{SEARCHXNG_MCP_HOST}:{SEARCHXNG_MCP_PORT}/mcp"
+SEARCHXNG_URL = f"http://{SEARCHXNG_MCP_HOST}:{SEARCHXNG_MCP_PORT}/mcp"
 
 
 WEATHER_MCP_HOST = "weather-mcp"
@@ -21,7 +22,7 @@ GEOCODING_MCP_PORT = 50054
 GEOCODING_URL = f"http://{GEOCODING_MCP_HOST}:{GEOCODING_MCP_PORT}/mcp"
 
 DATETIME_MCP_HOST = "datetime-mcp"
-DATETIME_MCP_PORT = 50055
+DATETIME_MCP_PORT = 50051
 DATETIME_URL = f"http://{DATETIME_MCP_HOST}:{DATETIME_MCP_PORT}/mcp"
 
 
@@ -85,22 +86,20 @@ async def call_geocoding(address: str) -> Dict[str, Any]:
     except Exception as e:
         return {"error": str(e), "results": []}
 
-async def call_datetime(timestamp: str) -> Dict[str, Any]:
+async def call_datetime() -> Dict[str, Any]:
     """
-    Call the Datetime MCP server to get datetime information for a given timestamp.
+    Call the Datetime MCP server to get current date in UTC.
     
     Args:
-        timestamp (str): The timestamp to process.
+        None
     
     Returns:
-        dict: Datetime result with the formatted date and time.
+        dict: current UTC date/time.
     """
-    if not timestamp or not isinstance(timestamp, str):
-        return {"error": "Timestamp must be a non-empty string", "results": []}
     
     try:
         async with Client(DATETIME_URL) as client:
-            mcp_response: CallToolResult = await client.call_tool("datetime_tool", {"timestamp": timestamp})
+            mcp_response: CallToolResult = await client.call_tool("get_current_datetime", {})
             return mcp_response.structured_content or mcp_response.content
     except Exception as e:
         return {"error": str(e), "results": []}

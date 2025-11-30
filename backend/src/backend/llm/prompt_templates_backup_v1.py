@@ -9,28 +9,28 @@ Available servers and their tools:
 
 1. Weather Server (weather)
    - tool: get_weather_tool
-   - args: {{"location": "string"}}
+   - args: {"location": "string"}
 
 2. Geocoding Server (geocoding)
    - tool: geocode_tool
-   - args: {{"address": "string"}}
+   - args: {"address": "string"}
 
 3. Datetime Server (datetime)
    - tool: get_current_datetime
-   - args: {{}}
+   - args: {}
 
 4. Search Server (searchxng)
    - tool: search_web
-   - args: {{"query": "string"}}
+   - args: {"query": "string"}
 
 Your output MUST be strict JSON:
-{{"tool_required": true/false, "tool_name": "weather/geocoding/datetime/searchxng", "arguments": {{}}, "final_answer": "answer or null"}}
+{"tool_required": true/false, "tool_name": "weather/geocoding/datetime/searchxng", "arguments": {}, "final_answer": "answer or null"}
 
 Examples:
-Weather: {{"tool_required": true, "tool_name": "weather", "arguments": {{"location": "Paris"}}, "final_answer": null}}
-Geocoding: {{"tool_required": true, "tool_name": "geocoding", "arguments": {{"address": "Chicago"}}, "final_answer": null}}
-Datetime: {{"tool_required": true, "tool_name": "datetime", "arguments": {{}}, "final_answer": null}}
-Search: {{"tool_required": true, "tool_name": "searchxng", "arguments": {{"query": "Python"}}, "final_answer": null}}
+Weather: {"tool_required": true, "tool_name": "weather", "arguments": {"location": "Paris"}, "final_answer": null}
+Geocoding: {"tool_required": true, "tool_name": "geocoding", "arguments": {"address": "Chicago"}, "final_answer": null}
+Datetime: {"tool_required": true, "tool_name": "datetime", "arguments": {}, "final_answer": null}
+Search: {"tool_required": true, "tool_name": "searchxng", "arguments": {"query": "Python"}, "final_answer": null}
 
 Now process this user query:
 {user_query}"""
