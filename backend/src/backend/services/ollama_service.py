@@ -19,12 +19,16 @@ async def chat_with_ollama(message: str, model_name: str = DEFAULT_MODEL) -> Dic
         "prompt": message,
         "stream": False
     }
+    print("In chat with ollama")
+    print("In chat with ollama model",model_name)
 
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=2000.0) as client:
+            print("chat with ollama About to post")
             response = await client.post(OLLAMA_URL, json=payload)
             response.raise_for_status()
             data = response.json()
+            print("chat with ollama data = response.json()",data)
 
             logger.info(f"[Ollama] Raw response: {data}")
             return {"message": data.get("response", "")}

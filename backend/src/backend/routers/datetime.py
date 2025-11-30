@@ -5,14 +5,15 @@ from pydantic import BaseModel
 router = APIRouter(prefix="/datetime", tags=["datetime"])
 
 class DatetimeRequest(BaseModel):
-    timestamp: str  # Assuming you're working with a timestamp to get datetime info
+    """Model for datetime request."""
+    # You can add fields here if needed. Currently, it's empty.
 
 @router.post("/get")
-async def get_datetime(request: DatetimeRequest):
+async def get_datetime():
     """
-    Call the Datetime MCP tool for a given timestamp.
+    Call the Datetime MCP tool to get current Time in UTC.
     """
-    result = await call_datetime(request.timestamp)
+    result = await call_datetime()
     
     if not result or "error" in result:
         raise HTTPException(status_code=400, detail=result.get("error", "Unknown error"))
