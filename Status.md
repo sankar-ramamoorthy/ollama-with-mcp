@@ -1,11 +1,7 @@
----
-
-# Project Status Report
+## Project Status Report
 
 **Project:** Ollama + MCP Orchestrated Chat System
 **Date:** 2025-12-03
-
----
 
 ## **1. Overview**
 
