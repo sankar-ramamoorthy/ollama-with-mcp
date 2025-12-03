@@ -59,6 +59,8 @@ curl -X POST http://localhost:8000/chat \
 | `POST /datetime/get` | Direct datetime   | Returns UTC ISO datetime            |
 | `POST /weather`      | Direct weather    | `{"location": "Dallas"}`            |
 | `GET /health`        | System status     | Health check                        |
+| `POST /search/get`   | Web Search        | `{"message": "News in Dallas?"}`    |
+
 
 ---
 
@@ -79,10 +81,9 @@ User → FastAPI (/chat) → LLM Decision → MCP Tool → LLM Synthesis → Res
 | backend       | 8000  | FastAPI orchestrator    |
 | datetime-mcp  | 50051 | Date/time MCP           |
 | weather-mcp   | 50053 | Weather MCP             |
-| searchxng     | 50052 | Web search MCP          |
+| ddgs-mcp      | 50052 | Web search MCP          |
 | geocoding-mcp | 50054 | Nominatim geocoding MCP |
 | frontend      | 7860  | Gradio UI               |
-| searxng_svc   | 8181  | SearxNG backend         |
 
 ---
 
