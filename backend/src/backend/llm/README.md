@@ -1,185 +1,223 @@
+# **LLM Orchestration Module (`backend/src/backend/llm`)**
 
-````markdown
-# Ollama with MCP Backend
+This directory contains the full **LLM reasoning + tool orchestration layer** for the backend.
+It is responsible for:
 
-A multi-component backend for orchestrating LLM queries with external MCP tools.  
-This project allows user queries to be processed by an LLM and routed to specialized tool servers (weather, geocoding, search, datetime) when required.
+1. Sending user prompts to **Ollama**
+2. Letting the model decide whether to call an **MCP tool**
+3. Executing tools via the **MCP Manager**
+4. Feeding tool results back into the LLM
+5. Returning the final natural-language answer
 
----
-
-## Table of Contents
-
-- [Architecture](#architecture)
-- [Features](#features)
-- [Directory Structure](#directory-structure)
-- [Getting Started](#getting-started)
-- [Usage](#usage)
-- [API Endpoints](#api-endpoints)
-- [Contributing](#contributing)
+This is the “brain” of the entire system.
 
 ---
 
-## Architecture
+# 📁 Directory Structure
 
-This backend uses a **Orchestration engine** with the following flow:
-
-1. **User Query → `/chat` Endpoint**  
-   The query is received at FastAPI `/chat`.
-
-2. **LLM Decision**  
-   The `LLMOrchestrator` sends a prompt to the Ollama LLM to determine whether a tool is needed.  
-   Output must follow the `ToolDecision` JSON schema:
-
-   ```json
-   {
-       "tool_required": true,
-       "tool_name": "weather",
-       "arguments": {"location": "San Francisco"},
-       "final_answer": null
-   }
-````
-
-3. **Tool Execution**
-   If a tool is required, the orchestrator calls `MCPManager.call_tool(tool_name, arguments)` to execute the corresponding MCP server tool.
-
-4. **Final Answer Generation**
-   Tool output is sent back to the LLM for final synthesis if necessary.
-   The orchestrator returns a unified JSON response to the user.
-
----
-
-## Features
-
-* Multi-step orchestration: User → LLM → Tool → LLM final answer.
-* Support for multiple MCP tools:
-
-  * Weather (`weather-mcp`)
-  * Geocoding (`geocoding-mcp`)
-  * Search (`searchxng-mcp`)
-  * Datetime (`datetime-mcp`)
-* Robust JSON parsing and error handling.
-* Unified logging for tracing LLM decisions and tool calls.
-* FastAPI backend with modular routers.
-
----
-
-## Directory Structure
-
-```text
-backend/
-├── src/
-│   └── backend/
-│       ├── llm/
-│       │   ├── orchestrator.py
-│       │   ├── mcp_manager.py
-│       │   └── schemas.py
-│       ├── mcp/
-│       │   └── manager.py
-│       ├── models/
-│       ├── routers/
-│       ├── services/
-│       ├── tests/
-│       └── app.py
-frontend/
-mcp-servers/
-searchxng_svc/
-docker-compose.yml
+```
+backend/src/backend/llm/
+├── orchestrator.py         # LLM reasoning + tool planning pipeline
+├── prompt_templates.py     # System prompts & tool-call formatting logic
+├── ollama_service.py       # HTTP client for Ollama models
+├── schemas.py              # Pydantic models for LLM messages & tool calls
+└── __init__.py
 ```
 
 ---
 
-## Getting Started
+# 🧠 Overview of Responsibilities
 
-1. **Clone the repository**
+## **1. Orchestrator (`orchestrator.py`)**
 
-```bash
-git clone <repo_url>
-cd ollama-with-mcp
+Handles *all* LLM interactions and MCP tool workflows.
+
+### Responsibilities:
+
+* Build system + user prompts
+* Send prompt to Ollama
+* Parse model output
+* Detect when a tool should be executed
+* Route tool calls to MCP Manager
+* Re-ask the LLM with tool results to produce final answer
+* Return clean final text to `/chat`
+
+### Core Flow:
+
+```
+User → Orchestrator → Ollama → (Tool?) → MCP Manager → LLM → Final Answer
 ```
 
-2. **Install dependencies for backend**
-
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-.venv\Scripts\activate     # Windows
-pip install -r requirements.txt
-```
-
-3. **Start Docker services**
-
-```bash
-docker-compose up --build
-```
-
-Services:
-
-* `backend` (FastAPI)
-* `weather-mcp`
-* `geocoding-mcp`
-* `searchxng-mcp`
-* `datetime-mcp`
-* `frontend`
-* `searchxng_svc`
+This file contains the core algorithm that makes your project an **agent**, not just a chatbot.
 
 ---
 
-## Usage
+## **2. Prompt Templates (`prompt_templates.py`)**
 
-* **Chat endpoint**: `/chat`
-* **Weather endpoint**: `/weather/get`
-* **Other MCP tools** are invoked automatically via the orchestrator when necessary.
+Contains reusable message templates including:
 
-Example `/chat` request:
+* System instructions
+* Tool-use guidelines
+* Format for tool calls
+* Formatting rules for returning tool results to the LLM
 
-```json
-{
-    "message": "What is the weather in Paris?"
-}
-```
+This gives models (like Qwen3 or Granite) a consistent structure for:
 
-Example `/chat` response:
-
-```json
-{
-    "response": "The weather in Paris is sunny with 20°C.",
-    "tool_output": {
-        "temperature": 20,
-        "condition": "sunny",
-        "location": "Paris"
-    }
-}
-```
+* Planning
+* Deciding tools
+* Responding with JSON-based tool call instructions
 
 ---
 
-## API Endpoints
+## **3. Ollama Service (`ollama_service.py`)**
 
-| Endpoint       | Method | Description                             |
-| -------------- | ------ | --------------------------------------- |
-| `/chat`        | POST   | Main LLM chat endpoint                  |
-| `/weather/get` | POST   | Fetch weather via Weather MCP tool      |
-| `/search`      | POST   | Search via SearchXNG MCP tool           |
-| `/geocode`     | POST   | Geocode via Geocoding MCP tool          |
-| `/datetime`    | POST   | Get formatted datetime via Datetime MCP |
-
----
-
-## Contributing
-
-1. Create a branch for the issue you are working on (e.g., `phase7/issue-30-orchestrator`).
-2. Implement and test features locally.
-3. Commit and push changes.
-4. Open a pull request and request review.
-
----
-
-## Notes
-
-* LLM interactions are async using `chat_with_ollama`.
-* All MCP calls are routed via `MCPManager` for consistent outputs.
-* The orchestrator is fully unit-testable with mocked MCP responses.
+A minimal async client that communicates with an Ollama model via:
 
 ```
+POST http://host.docker.internal:11434/api/generate
+```
+
+### Responsibilities:
+
+* Format payload for Ollama
+* Handle streaming or non-streaming responses
+* Extract model response text
+* Surface model or connection errors cleanly
+
+This module isolates all LLM-specific networking.
+
+---
+
+## **4. Schemas (`schemas.py`)**
+
+Defines Pydantic models for:
+
+* LLM messages
+* Tool call blocks
+* Parsed LLM outputs
+* Final orchestrated result models
+
+Examples include:
+
+* `LLMMessage`
+* `ToolCall`
+* `LLMResponse`
+* `OrchestratedResult`
+
+These ensure stable internal typing and clean error handling.
+
+---
+
+# 🔧 How the Orchestrator Works Internally
+
+### **1. Build the conversation structure**
+
+```
+system_prompt = build_system_prompt()
+user_message = {"role": "user", "content": query}
+```
+
+### **2. Send to Ollama**
+
+```
+response = ollama_service.ask(messages)
+```
+
+### **3. Parse model output**
+
+Look for:
+
+```
+<tool name="get_weather">
+{ "location": "Tokyo" }
+</tool>
+```
+
+If found → extract name + arguments.
+
+### **4. Execute tool via MCP Manager**
+
+```
+tool_result = mcp_manager.call_tool(name, args)
+```
+
+### **5. Send tool result back to the LLM**
+
+```
+assistant: "Tool result: { ...json... }"
+```
+
+### **6. Return final natural-language answer**
+
+The LLM formats the message for the user.
+
+---
+
+# 🚀 Adding New Tools
+
+To add a new MCP server:
+
+1. Launch MCP server in docker-compose
+2. Register it in `mcp/manager.py`
+3. Add a new prompt block in `prompt_templates.py`
+4. Nothing else — the orchestrator already supports multi-tool execution
+
+---
+
+# 🧪 Testing Strategy
+
+Tests should mock:
+
+* Ollama responses
+* MCP tool responses
+* Decision-making flow (tool use vs direct answer)
+
+This ensures:
+
+* Deterministic output
+* No dependency on LLM variability
+* No need for real MCP servers during unit tests
+
+---
+
+# 📘 Additional Notes
+
+### ✔ The orchestrator is model-agnostic
+
+Any Ollama model (Qwen, Granite, LLaMA, Mistral) can be swapped via:
+
+```
+model_name="Qwen3:4b"
+```
+
+### ✔ Prompt templates are the key to reliability
+
+Minor prompt changes can significantly affect:
+
+* Tool call accuracy
+* Planning behavior
+* Multi-step workflows
+
+### ✔ Errors are trapped early
+
+Both LLM errors and MCP errors return structured logs to help debugging.
+
+---
+
+# 🧩 Summary
+
+This module is responsible for:
+
+* Reasoning
+* Tool selection
+* Tool execution
+* Final answer generation
+
+It turns a raw LLM into an **autonomous, multi-tool agent** capable of:
+
+* Searching the web
+* Fetching weather
+* Getting dates/times
+* Performing geocoding
+* Integrating multiple tools in one conversation
 

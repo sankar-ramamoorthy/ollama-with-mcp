@@ -5,7 +5,7 @@ Modular AI Agent platform using **Ollama (Qwen3:4B)** + **FastMCP tools** + **Fa
 
 **A fully local, framework-free ReAct-style AI agent using Ollama, FastAPI, and MCP microservices (weather, search, geocoding, datetime).**
 
----
+Note: This project was developed rapidly with the assistance of AI tools (ChatGPT, Perplexity.ai, DuckDuckGo AI, Google Search), enabling efficient design, documentation, and multi-service orchestration on modest hardware.
 
 ## 🎯 Features
 
@@ -100,4 +100,23 @@ uv run python datetime_mcp/server.py
 - [DuckDuckGo Search](https://pypi.org/project/duckduckgo-search/) - Web search
 - [Open-Meteo](https://open-meteo.com) - Weather API
 ```
+
+---
+
+## Acknowledgments & Credits
+
+* **AI Assistance:** The README, documentation, and several project markdown files were created with extensive help from **ChatGPT (Free Version)**, along with supplementary support from **Perplexity.ai** (free version) and AI features from **DuckDuckGo** and **Google Search**.
+* **Rapid Development on Modest Hardware:** The project was developed on a **HP ENVY x360 laptop (Intel i7-8565U, 8 GB RAM, Windows 11 Home)** in just **4 days**,(during thanksgiving break) ,  demonstrating efficient resource usage.
+* **Productivity Enhancement:** AI tools helped streamline development, maintain GitHub issues and milestones, and ensure adherence to the project plan and schedule.
+* **Open-Source Resources:** This project leverages existing repositories and tools, including:
+
+  * [Docker](https://www.docker.com/) for container orchestration
+  * [FastMCP](https://github.com/your-link) for MCP server infrastructure
+  * [Open-Meteo](https://open-meteo.com/) for weather APIs
+  * [Nominatim](https://nominatim.org/) for geocoding
+  * My **previous repositories** for reusable utilities and code patterns
+
+> ⚡ *Note:* This project was built with AI-assisted development to maximize efficiency while maintaining a clean architecture and robust multi-service deployment.
+
+---
 
