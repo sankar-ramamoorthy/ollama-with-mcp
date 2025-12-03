@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from backend.mcp_clients import call_datetime  # <-- call_datetime client function
+from backend.mcp_clients import call_get_current_datetime  # <-- call_datetime client function
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/datetime", tags=["datetime"])
@@ -9,11 +9,11 @@ class DatetimeRequest(BaseModel):
     # You can add fields here if needed. Currently, it's empty.
 
 @router.post("/get")
-async def get_datetime():
+async def get_current_datetime():
     """
     Call the Datetime MCP tool to get current Time in UTC.
     """
-    result = await call_datetime()
+    result = await call_get_current_datetime()
     
     if not result or "error" in result:
         raise HTTPException(status_code=400, detail=result.get("error", "Unknown error"))

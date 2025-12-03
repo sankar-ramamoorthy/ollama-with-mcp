@@ -6,7 +6,7 @@ services:
       - "8000:8000"
     depends_on:
       - datetime-mcp
-      - searchxng-mcp
+      - ddgs-mcp
       - weather-mcp
     restart: unless-stopped
     networks:
@@ -20,8 +20,8 @@ services:
     networks:
       - llm_network
 
-  searchxng-mcp:
-    build: ./mcp-servers/searchxng
+  ddgs-mcp:
+    build: ./mcp-servers/ddgs
     ports:
       - "50052:50052"
     restart: unless-stopped
@@ -54,19 +54,19 @@ services:
     networks:
       - llm_network
 
-  searchxng_svc:
-    build: ./searchxng_svc
-    volumes:
-      - ./searchxng_svc/settings.yml:/etc/searxng/settings.yml
-      - ./searchxng_svc/limiter.toml:/etc/searxng/limiter.toml
-      - searxng_cache:/var/cache/searxng
-    ports:
-      - "8181:8080"
-    networks:
-      - llm_network
+  #searchxng_svc:
+  #  build: ./searchxng_svc
+  #  volumes:
+  #    - ./searchxng_svc/settings.yml:/etc/searxng/settings.yml
+  #    - ./searchxng_svc/limiter.toml:/etc/searxng/limiter.toml
+  #    - searxng_cache:/var/cache/searxng
+  #  ports:
+  #    - "8181:8080"
+  #  networks:
+  #    - llm_network
 
 networks:
   llm_network:
 
-volumes:
-  searxng_cache:
+#volumes:
+#  searxng_cache:

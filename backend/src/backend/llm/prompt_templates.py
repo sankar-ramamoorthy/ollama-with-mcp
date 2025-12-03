@@ -16,21 +16,21 @@ Available servers and their tools:
    - args: {{"address": "string"}}
 
 3. Datetime Server (datetime)
-   - tool: get_current_datetime
+   - tool: get_current_datetime_tool
    - args: {{}}
 
-4. Search Server (searchxng)
-   - tool: search_web
+4. Search Server (ddgs)
+   - tool: search_web_tool
    - args: {{"query": "string"}}
 
 Your output MUST be strict JSON:
-{{"tool_required": true/false, "tool_name": "weather/geocoding/datetime/searchxng", "arguments": {{}}, "final_answer": "answer or null"}}
+{{"tool_required": true/false, "tool_name": "weather/geocoding/datetime/ddgs", "arguments": {{}}, "final_answer": "answer or null"}}
 
 Examples:
 Weather: {{"tool_required": true, "tool_name": "weather", "arguments": {{"location": "Paris"}}, "final_answer": null}}
 Geocoding: {{"tool_required": true, "tool_name": "geocoding", "arguments": {{"address": "Chicago"}}, "final_answer": null}}
 Datetime: {{"tool_required": true, "tool_name": "datetime", "arguments": {{}}, "final_answer": null}}
-Search: {{"tool_required": true, "tool_name": "searchxng", "arguments": {{"query": "Python"}}, "final_answer": null}}
+Search: {{"tool_required": true, "tool_name": "ddgs", "arguments": {{"query": "News of the day"}}, "final_answer": null}}
 
 Now process this user query:
 {user_query}"""
