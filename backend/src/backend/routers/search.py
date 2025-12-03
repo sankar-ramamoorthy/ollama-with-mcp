@@ -1,24 +1,24 @@
-from fastapi import APIRouter, Query
-from fastmcp.client.client import CallToolResult
-from backend.mcp_clients import call_searchxng
+# backend/src/backend/routers/search.py
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from backend.mcp_clients import call_ddgs
 
-router = APIRouter(prefix="/mcp", tags=["MCP"])
+router = APIRouter(prefix="/search", tags=["search"])
 
-@router.get("/search")
-async def search_endpoint(query: str = Query(..., description="Search query")):
+
+class SearchRequest(BaseModel):
+    query: str
+    max_results: int = 5
+
+
+@router.post("/get")
+async def search_endpoint(request: SearchRequest):
     """
-    Call the SearchXNG MCP tool via backend.
-    Returns MCP server results.
+    Call the DDGS MCP tool for a given query.
     """
-    #result = await call_searchxng(query)
-    mcp_result: CallToolResult = await call_searchxng(query)
-    # Access the actual data from the CallToolResult object
-    # Assuming the server returns a dictionary with 'results' and potentially 'error'
-    result_data = mcp_result.structured_content or mcp_result.content
+    result = await call_ddgs(request.query, request.max_results)
 
-    # Optional: if the MCP call failed, return a clear error
-    if "error" in result_data:
-        return {"success": False, "error": result_data["error"], "results": []}
+    if not result or "error" in result:
+        raise HTTPException(status_code=400, detail=result.get("error", "Unknown error"))
 
-    return {"success": True, "query": query, "results": result_data.get("results", [])}
-    #return(result_data)
+    return result

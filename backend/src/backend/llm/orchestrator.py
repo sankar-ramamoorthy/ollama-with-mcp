@@ -11,14 +11,15 @@ from backend.mcp.manager import MCPManager
 from backend.services.ollama_service import chat_with_ollama
 
 logger = logging.getLogger(__name__)
-
+DEFAULT_MODEL = "Qwen3:4b"
 
 # MCP server URLs
 MCP_SERVERS = {
     "weather": "http://weather-mcp:50053/mcp",
     "geocoding": "http://geocoding-mcp:50054/mcp",
     "datetime": "http://datetime-mcp:50051/mcp",
-    "searchxng": "http://searchxng-mcp:50052/mcp",
+    #"searchxng": "http://searchxng-mcp:50052/mcp",
+    "ddgs": "http://ddgs-mcp:50052/mcp",  # ← Replace searchxng
 }
 
 
@@ -28,10 +29,13 @@ TOOL_NAME_TO_MCP_FUNCTION = {
     "get_weather_tool": "get_weather_tool",      # ✅ Matches weather_mcp/server.py
     "geocoding": "geocode_tool",        # ✅ Matches geocoding_mcp/server.py
     "geocode_tool": "geocode_tool",        # ✅ Matches geocoding_mcp/server.py
-    "datetime": "get_current_datetime", # ✅ Matches datetime_mcp/server.py
-    "get_current_datetime": "get_current_datetime", # ✅ Matches datetime_mcp/server.py
-    "searchxng": "search_web",          # ✅ Matches searchxng_mcp/server.py
-    "search_web": "search_web",          # ✅ Matches searchxng_mcp/server.py
+    "datetime": "get_current_datetime_tool", # ✅ Matches datetime_mcp/server.py
+    "get_current_datetime": "get_current_datetime_tool", # ✅ Matches datetime_mcp/server.py
+    #"searchxng": "search_web",          # ✅ Matches searchxng_mcp/server.py
+    #"search_web": "search_web",          # ✅ Matches searchxng_mcp/server.py
+    "ddgs": "web_search_tool",      # ← Replace searchxng
+    "web_search": "web_search_tool",
+
 }
 
 
@@ -40,7 +44,7 @@ class ChatOrchestrator:
     Handles multi-step orchestration: user -> LLM -> tool -> LLM final answer
     """
 
-    def __init__(self, model_name: str = "granite4:350m"):
+    def __init__(self, model_name: str = "Qwen3:4b"):
         self.model_name = model_name
         print("in __init__")
         self.mcp_manager = MCPManager()
@@ -174,5 +178,5 @@ class ChatOrchestrator:
 # ---------------------------
 # Singleton orchestrator instance
 # ---------------------------
-
-orchestrator = ChatOrchestrator()
+model_name = DEFAULT_MODEL
+orchestrator = ChatOrchestrator(model_name=model_name)
