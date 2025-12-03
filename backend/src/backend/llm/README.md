@@ -21,7 +21,7 @@ This project allows user queries to be processed by an LLM and routed to special
 
 ## Architecture
 
-This backend uses a **Phase 7 orchestration engine** with the following flow:
+This backend uses a **Orchestration engine** with the following flow:
 
 1. **User Query → `/chat` Endpoint**  
    The query is received at FastAPI `/chat`.
