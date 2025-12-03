@@ -4,7 +4,8 @@ from fastmcp import Client
 from fastmcp.client.client import CallToolResult
 from backend.mcp_clients import (
     DATETIME_URL,
-    SEARCHXNG_URL,
+    #SEARCHXNG_URL,
+    DDGS_URL,
     WEATHER_URL,
     GEOCODING_URL
 )
@@ -23,7 +24,8 @@ class MCPManager:
         # Registry of MCP servers
         self.servers = {
             "datetime": DATETIME_URL,
-            "searchxng": SEARCHXNG_URL,
+            #"searchxng": SEARCHXNG_URL,
+            "ddgs": DDGS_URL,
             "weather": WEATHER_URL,
             "geocoding": GEOCODING_URL,
         }

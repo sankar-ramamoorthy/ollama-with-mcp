@@ -10,7 +10,7 @@ def main():
     mcp = FastMCP("datetime-mcp")
 
     @mcp.tool
-    def get_current_datetime():
+    def get_current_datetime_tool():
         """Return current UTC datetime."""
         return current_datetime()
 

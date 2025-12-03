@@ -1,0 +1,1 @@
+# DDGS MCP Server DuckDuckGoSearch to Search Web
